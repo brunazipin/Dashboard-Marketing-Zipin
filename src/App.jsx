@@ -535,50 +535,99 @@ function LinksPage() {
   );
 }
 
-function SettingsModal({ token, setToken, igData, igError, igLoading, onConnect, onClose }) {
-  const [draft, setDraft] = useState(token);
+function NetworkRow({ label, color, icon: Icon, connected, loading, error, draft, setDraft, onConnect, placeholder, hint }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom:`1px solid rgba(255,255,255,0.05)`, paddingBottom:14, marginBottom:14 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom: open ? 10 : 0, cursor:'pointer' }} onClick={() => setOpen(o => !o)}>
+        <div style={{ width:30, height:30, borderRadius:7, background:`${color}20`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <Icon size={13} color={color} />
+        </div>
+        <div style={{ fontSize:13, fontWeight:600, color:C.text, flex:1 }}>{label}</div>
+        {connected
+          ? <div className="tag" style={{ background:'rgba(76,175,138,0.15)', color:C.green, gap:4 }}><CheckCircle size={10}/> Conectado</div>
+          : <div className="tag" style={{ background:'rgba(122,155,191,0.1)', color:C.sub }}>Desconectado</div>
+        }
+        <ChevronRight size={13} color={C.sub} style={{ transform: open ? 'rotate(90deg)' : 'none', transition:'transform 0.2s', marginLeft:4 }} />
+      </div>
+      {open && (
+        <div style={{ marginTop:8 }}>
+          {hint && <div style={{ fontSize:11, color:C.sub, marginBottom:8, lineHeight:1.5, background:'rgba(45,156,219,0.05)', border:'1px solid rgba(45,156,219,0.12)', borderRadius:7, padding:'8px 11px' }}>{hint}</div>}
+          <textarea className="inp" rows={2} placeholder={placeholder} value={draft} onChange={e => setDraft(e.target.value)} style={{ resize:'none', marginBottom:8, fontFamily:'monospace', fontSize:11 }} />
+          {error && <div style={{ background:'rgba(224,90,90,0.1)', border:'1px solid rgba(224,90,90,0.2)', borderRadius:7, padding:'7px 11px', fontSize:11, color:C.red, marginBottom:8 }}><AlertCircle size={11} style={{ display:'inline', marginRight:4 }}/>{error}</div>}
+          {connected && <div style={{ background:'rgba(76,175,138,0.07)', border:'1px solid rgba(76,175,138,0.18)', borderRadius:7, padding:'7px 11px', fontSize:11, color:C.green, marginBottom:8 }}>✓ Token ativo</div>}
+          <button className="btn bp" onClick={onConnect} disabled={loading} style={{ opacity: loading ? 0.7 : 1, width:'100%', justifyContent:'center' }}>
+            {loading ? <><RefreshCw size={12} className="spin"/> Conectando...</> : <>Conectar {label}</>}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SettingsModal({ token, setToken, igData, igError, igLoading, onConnect,
+  ytKey, setYtKey, ytData, ytError, ytLoading, onConnectYt,
+  ttToken, setTtToken, ttData, ttError, ttLoading, onConnectTt,
+  liToken, setLiToken, liData, liError, liLoading, onConnectLi,
+  onClose }) {
+  const [igDraft, setIgDraft] = useState(token);
+  const [ytDraft, setYtDraft] = useState(ytKey);
+  const [ttDraft, setTtDraft] = useState(ttToken);
+  const [liDraft, setLiDraft] = useState(liToken);
   return (
     <div className="modal-bg" onClick={e => { if(e.target===e.currentTarget) onClose(); }}>
       <div className="modal">
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:800, color:C.text }}>Configurações de API</div>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:800, color:C.text }}>Configurações de Integrações</div>
           <button className="btn bg" style={{ padding:'3px 8px' }} onClick={onClose}><X size={13}/></button>
         </div>
-        <div style={{ background:'rgba(45,156,219,0.06)', border:'1px solid rgba(45,156,219,0.18)', borderRadius:9, padding:'11px 13px', marginBottom:18, fontSize:12, color:C.sub, lineHeight:1.6 }}>
-          Para conectar o Instagram, acesse <strong style={{ color:C.blue }}>developers.facebook.com</strong>, crie um app com permissões de Instagram Business e gere um <strong style={{ color:C.text }}>Access Token de longa duração</strong>.
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:7 }}>
-          <div style={{ width:28, height:28, borderRadius:6, background:'rgba(225,48,108,0.15)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Instagram size={13} color={C.insta} />
-          </div>
-          <div style={{ fontSize:13, fontWeight:600, color:C.text }}>Instagram Access Token</div>
-          {igData && <div className="tag" style={{ background:'rgba(76,175,138,0.15)', color:C.green, marginLeft:'auto', gap:4 }}><CheckCircle size={10}/> Conectado</div>}
-        </div>
-        <textarea className="inp" rows={3} placeholder="Cole seu Instagram Access Token aqui..." value={draft} onChange={e=>setDraft(e.target.value)} style={{ resize:'none', marginBottom:10, fontFamily:'monospace', fontSize:11 }} />
-        {igData && (
-          <div style={{ background:'rgba(76,175,138,0.07)', border:'1px solid rgba(76,175,138,0.2)', borderRadius:8, padding:'10px 13px', marginBottom:12, fontSize:12 }}>
-            <div style={{ color:C.green, fontWeight:600 }}>✓ Conectado como @{igData.username}</div>
-            <div style={{ color:C.sub, marginTop:3 }}>{igData.followers_count?.toLocaleString('pt-BR')} seguidores · {igData.media_count} posts</div>
-          </div>
-        )}
-        {igError && (
-          <div style={{ background:'rgba(224,90,90,0.1)', border:'1px solid rgba(224,90,90,0.22)', borderRadius:8, padding:'10px 13px', marginBottom:12, fontSize:12, color:C.red }}>
-            <AlertCircle size={12} style={{ display:'inline', marginRight:5 }}/>{igError}
-          </div>
-        )}
-        <div style={{ display:'flex', gap:9, justifyContent:'flex-end' }}>
+
+        <NetworkRow
+          label="Instagram" color={C.insta} icon={Instagram}
+          connected={!!igData} loading={igLoading} error={igError}
+          draft={igDraft} setDraft={setIgDraft}
+          onConnect={() => { setToken(igDraft); onConnect(igDraft); }}
+          placeholder="Cole seu Instagram Access Token..."
+          hint="Gere o token em developers.facebook.com → seu app → Casos de uso → Gerar tokens de acesso."
+        />
+
+        <NetworkRow
+          label="YouTube" color={C.yt} icon={Youtube}
+          connected={!!ytData} loading={ytLoading} error={ytError}
+          draft={ytDraft} setDraft={setYtDraft}
+          onConnect={() => { setYtKey(ytDraft); onConnectYt(ytDraft); }}
+          placeholder="Cole sua YouTube Data API Key (AIzaSy...)..."
+          hint="Gere em console.cloud.google.com → APIs → YouTube Data API v3 → Credenciais → Criar chave de API."
+        />
+
+        <NetworkRow
+          label="TikTok" color={C.tiktok} icon={Share2}
+          connected={!!ttData} loading={ttLoading} error={ttError}
+          draft={ttDraft} setDraft={setTtDraft}
+          onConnect={() => { setTtToken(ttDraft); onConnectTt(ttDraft); }}
+          placeholder="Cole seu TikTok Access Token..."
+          hint="Gere em developers.tiktok.com → seu app → Manage Apps → Access Token."
+        />
+
+        <NetworkRow
+          label="LinkedIn" color={C.li} icon={Linkedin}
+          connected={!!liData} loading={liLoading} error={liError}
+          draft={liDraft} setDraft={setLiDraft}
+          onConnect={() => { setLiToken(liDraft); onConnectLi(liDraft); }}
+          placeholder="Cole seu LinkedIn Access Token..."
+          hint="Gere em linkedin.com/developers → seu app → Auth → OAuth 2.0 tools → Request access token."
+        />
+
+        <div style={{ display:'flex', justifyContent:'flex-end', marginTop:6 }}>
           <button className="btn bg" onClick={onClose}>Fechar</button>
-          <button className="btn bp" onClick={() => { setToken(draft); onConnect(draft); }} disabled={igLoading} style={{ opacity: igLoading ? 0.7 : 1 }}>
-            {igLoading ? <><RefreshCw size={13} className="spin"/> Conectando...</> : <><Instagram size={13}/> Conectar Instagram</>}
-          </button>
         </div>
-        <div style={{ borderTop:`1px solid ${C.border}`, marginTop:18, paddingTop:14 }}>
-          <div style={{ fontSize:10, color:C.mute, fontWeight:600, letterSpacing:'1.2px', textTransform:'uppercase', marginBottom:10 }}>Próximas integrações</div>
-          {[['TikTok',C.tiktok],['YouTube',C.yt],['LinkedIn',C.li]].map(([n,c]) => (
-            <div key={n} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:`1px solid rgba(255,255,255,0.04)` }}>
+        <div style={{ borderTop:`1px solid ${C.border}`, marginTop:14, paddingTop:12 }}>
+          <div style={{ fontSize:10, color:C.mute, fontWeight:600, letterSpacing:'1.2px', textTransform:'uppercase', marginBottom:8 }}>Entrada manual</div>
+          {[['Newsletter',C.nl],['Invest Imob',C.comm]].map(([n,c]) => (
+            <div key={n} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:`1px solid rgba(255,255,255,0.04)` }}>
               <div style={{ width:24, height:24, borderRadius:5, background:`${c}20`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:c, fontWeight:700 }}>{n[0]}</div>
               <span style={{ fontSize:13, color:C.sub }}>{n}</span>
-              <span style={{ fontSize:10, color:C.mute, marginLeft:'auto', background:'rgba(255,255,255,0.04)', padding:'2px 8px', borderRadius:20 }}>Em breve</span>
+              <span style={{ fontSize:10, color:C.mute, marginLeft:'auto', background:'rgba(255,255,255,0.04)', padding:'2px 8px', borderRadius:20 }}>Inserção manual</span>
             </div>
           ))}
         </div>
@@ -604,6 +653,18 @@ export default function App() {
   const [igData,      setIgData]      = useState(null);
   const [igLoading,   setIgLoading]   = useState(false);
   const [igError,     setIgError]     = useState(null);
+  const [ytKey,       setYtKey]       = useState('');
+  const [ytData,      setYtData]      = useState(null);
+  const [ytLoading,   setYtLoading]   = useState(false);
+  const [ytError,     setYtError]     = useState(null);
+  const [ttToken,     setTtToken]     = useState('');
+  const [ttData,      setTtData]      = useState(null);
+  const [ttLoading,   setTtLoading]   = useState(false);
+  const [ttError,     setTtError]     = useState(null);
+  const [liToken,     setLiToken]     = useState('');
+  const [liData,      setLiData]      = useState(null);
+  const [liLoading,   setLiLoading]   = useState(false);
+  const [liError,     setLiError]     = useState(null);
 
   const fetchIG = async (tkn) => {
     const t = tkn !== undefined ? tkn : igToken;
@@ -616,6 +677,50 @@ export default function App() {
       setIgData(d);
     } catch(e) { setIgError(e.message); }
     setIgLoading(false);
+  };
+
+  const fetchYT = async (key) => {
+    const k = key !== undefined ? key : ytKey;
+    if (!k) return;
+    setYtLoading(true); setYtError(null);
+    try {
+      const r = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true&key=${k}`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message || 'Chave inválida');
+      if (!d.items?.length) throw new Error('Nenhum canal encontrado');
+      setYtData(d.items[0]);
+    } catch(e) { setYtError(e.message); }
+    setYtLoading(false);
+  };
+
+  const fetchTT = async (tkn) => {
+    const t = tkn !== undefined ? tkn : ttToken;
+    if (!t) return;
+    setTtLoading(true); setTtError(null);
+    try {
+      const r = await fetch(`https://open.tiktokapis.com/v2/user/info/?fields=display_name,follower_count,video_count`, {
+        headers: { 'Authorization': `Bearer ${t}` }
+      });
+      const d = await r.json();
+      if (d.error?.code && d.error.code !== 'ok') throw new Error(d.error.message || 'Token inválido');
+      setTtData(d.data?.user);
+    } catch(e) { setTtError(e.message); }
+    setTtLoading(false);
+  };
+
+  const fetchLI = async (tkn) => {
+    const t = tkn !== undefined ? tkn : liToken;
+    if (!t) return;
+    setLiLoading(true); setLiError(null);
+    try {
+      const r = await fetch(`https://api.linkedin.com/v2/me`, {
+        headers: { 'Authorization': `Bearer ${t}` }
+      });
+      const d = await r.json();
+      if (d.status === 401 || d.message) throw new Error(d.message || 'Token inválido');
+      setLiData(d);
+    } catch(e) { setLiError(e.message); }
+    setLiLoading(false);
   };
 
   const today = new Date();
@@ -672,7 +777,17 @@ export default function App() {
           <SettingsModal
             token={igToken} setToken={setIgToken}
             igData={igData} igError={igError} igLoading={igLoading}
-            onConnect={fetchIG} onClose={() => setShowCfg(false)}
+            onConnect={fetchIG}
+            ytKey={ytKey} setYtKey={setYtKey}
+            ytData={ytData} ytError={ytError} ytLoading={ytLoading}
+            onConnectYt={fetchYT}
+            ttToken={ttToken} setTtToken={setTtToken}
+            ttData={ttData} ttError={ttError} ttLoading={ttLoading}
+            onConnectTt={fetchTT}
+            liToken={liToken} setLiToken={setLiToken}
+            liData={liData} liError={liError} liLoading={liLoading}
+            onConnectLi={fetchLI}
+            onClose={() => setShowCfg(false)}
           />
         )}
       </div>
